@@ -35,7 +35,7 @@ export async function registerForPushNotificationsAsync() {
   return true;
 }
 
-export async function scheduleDeadManNotifications(deadline: number) {
+export async function scheduleDeadManNotifications(deadline: number, debugMode: string = "standard") {
   // Cancel all existing to avoid duplicates
   await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -103,5 +103,76 @@ export async function scheduleDeadManNotifications(deadline: number) {
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(final) },
     });
+  }
+
+  // 6. At deadline: contacts have been notified
+  if (deadline > now) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Your contacts have been notified",
+        body: "We've reached out to your emergency contacts to let them know you may need help.",
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(deadline) },
+    });
+  }
+
+  // Debug mode notifications
+  if (debugMode === "1min") {
+    // Fast mode: 30s, 10s, 1s warnings
+    const debug30s = deadline - (30 * 1000);
+    if (debug30s > now) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "[DEBUG] 30s remaining",
+          body: `Deadline: ${new Date(deadline).toISOString()}`,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(debug30s) },
+      });
+    }
+
+    const debug10s = deadline - (10 * 1000);
+    if (debug10s > now) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "[DEBUG] 10s remaining",
+          body: `Deadline: ${new Date(deadline).toISOString()}`,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(debug10s) },
+      });
+    }
+
+    const debug1s = deadline - (1 * 1000);
+    if (debug1s > now) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "[DEBUG] 1s remaining",
+          body: `Deadline: ${new Date(deadline).toISOString()}`,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(debug1s) },
+      });
+    }
+  } else if (debugMode === "10sec") {
+    // Hyper mode: 5s, 1s warnings
+    const debug5s = deadline - (5 * 1000);
+    if (debug5s > now) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "[DEBUG] 5s remaining",
+          body: `Deadline: ${new Date(deadline).toISOString()}`,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(debug5s) },
+      });
+    }
+
+    const debug1s = deadline - (1 * 1000);
+    if (debug1s > now) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "[DEBUG] 1s remaining",
+          body: `Deadline: ${new Date(deadline).toISOString()}`,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(debug1s) },
+      });
+    }
   }
 }

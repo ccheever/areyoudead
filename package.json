@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@expo-google-fonts/josefin-sans": "^0.4.2",
-    "@react-native-community/datetimepicker": "^8.6.0",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@types/uuid": "^11.0.0",
     "convex": "^1.31.4",
     "expo": "~54.0.31",
