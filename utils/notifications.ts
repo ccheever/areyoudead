@@ -49,8 +49,8 @@ export async function scheduleDeadManNotifications(deadline: number) {
   if (graceStart > now) {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "Check In Required",
-        body: "You missed your check-in time. You have 24 hours to verify you are alive.",
+        title: "Are you alive?",
+        body: "It's time for your daily check in. If you don't check in by this time tomorrow, we'll notify your contacts. I'll remind you later if you don't do it now.",
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(graceStart) },
     });
@@ -63,7 +63,7 @@ export async function scheduleDeadManNotifications(deadline: number) {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Reminder: Are You Dead?",
-        body: "Don't forget to check in by tomorrow morning.",
+        body: "Still waiting for you to check in!",
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(eveningReminder) },
     });
@@ -74,8 +74,8 @@ export async function scheduleDeadManNotifications(deadline: number) {
   if (urgent > now) {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "URGENT: Check In Now",
-        body: "You have 1 hour before emergency contacts are notified.",
+        title: "Starting to worry about you",
+        body: "I'm going to reach out to your emergency contacts in 1 hour if you don't check in.",
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(urgent) },
     });
@@ -86,8 +86,8 @@ export async function scheduleDeadManNotifications(deadline: number) {
   if (critical > now) {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "CRITICAL WARNING",
-        body: "10 minutes remaining! Open the app NOW.",
+        title: "I think you're dead :|",
+        body: "Going to let your contacts know in 10 minutes",
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(critical) },
     });
@@ -98,8 +98,8 @@ export async function scheduleDeadManNotifications(deadline: number) {
   if (final > now) {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "LAST CHANCE",
-        body: "1 minute remaining. Goodbye?",
+        title: "Goodbye?",
+        body: ":(",
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(final) },
     });
