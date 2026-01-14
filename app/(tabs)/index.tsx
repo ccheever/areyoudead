@@ -4,8 +4,8 @@ import { api } from "../../convex/_generated/api";
 import { useUserId } from "../../hooks/useUserId";
 import { useEffect } from "react";
 import { Link } from "expo-router";
-
-const DEAD_THRESHOLD = 48 * 60 * 60 * 1000;
+import { calculateNextDeadline } from "../../utils/deadline";
+import { scheduleDeadManNotifications, registerForPushNotificationsAsync } from "../../utils/notifications";
 
 export default function HomeScreen() {
   const userId = useUserId();
@@ -17,12 +17,24 @@ export default function HomeScreen() {
   useEffect(() => {
     if (userId) {
       getOrCreate({ token: userId });
+      registerForPushNotificationsAsync();
     }
   }, [userId]);
 
   const handleCheckIn = async () => {
-    if (userId) {
-      await checkIn({ token: userId });
+    if (userId && user) {
+      // Use user preferences or defaults
+      const h = user.checkInHour ?? 8;
+      const m = user.checkInMinute ?? 30;
+      
+      const nextDeadline = calculateNextDeadline(h, m);
+      
+      await checkIn({ 
+        token: userId,
+        nextDeadline 
+      });
+      
+      await scheduleDeadManNotifications(nextDeadline);
     }
   };
 
@@ -34,10 +46,10 @@ export default function HomeScreen() {
     );
   }
 
-  // Calculate time remaining
-  const lastCheckIn = user?.lastCheckIn || Date.now();
-  const timeSince = Date.now() - lastCheckIn;
-  const timeRemaining = Math.max(0, DEAD_THRESHOLD - timeSince);
+  // Calculate time remaining based on SERVER deadline
+  // If user.nextDeadline is missing (old user), fallback to calculating it now
+  const deadline = user?.nextDeadline ?? (user ? user.lastCheckIn + (48 * 60 * 60 * 1000) : Date.now());
+  const timeRemaining = Math.max(0, deadline - Date.now());
   
   const days = Math.floor(timeRemaining / (24 * 60 * 60 * 1000));
   const hours = Math.floor((timeRemaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
@@ -56,6 +68,9 @@ export default function HomeScreen() {
             <>
                 <Text style={styles.label}>Time Remaining:</Text>
                 <Text style={styles.timerText}>{days}d {hours}h {minutes}m</Text>
+                <Text style={styles.subText}>
+                    Deadline: {new Date(deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', weekday: 'short' })}
+                </Text>
             </>
         )}
       </View>
@@ -100,6 +115,11 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: '900',
     color: '#333',
+  },
+  subText: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 5,
   },
   mainButton: {
     width: 200,

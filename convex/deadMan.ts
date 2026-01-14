@@ -13,7 +13,10 @@ export const getOverdueUsers = internalQuery({
     const overdueUsers = [];
 
     for (const user of users) {
-      const isDead = now - user.lastCheckIn > DEAD_THRESHOLD;
+      // Use nextDeadline if available, otherwise fallback to legacy 48h
+      const deadline = user.nextDeadline ?? (user.lastCheckIn + DEAD_THRESHOLD);
+      
+      const isDead = now > deadline;
       const shouldNotify = !user.lastNotified || (now - user.lastNotified > NOTIFICATION_COOLDOWN);
 
       if (isDead && shouldNotify) {

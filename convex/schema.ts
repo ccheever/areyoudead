@@ -4,9 +4,12 @@ import { v } from "convex/values";
 export default defineSchema({
   users: defineTable({
     token: v.string(), // Unique device ID or user token
-    lastCheckIn: v.number(), // Timestamp of last "I'm Alive" press
-    lastNotified: v.optional(v.number()), // Timestamp of last notification sent
+    lastCheckIn: v.number(), // Timestamp of actual button press
+    nextDeadline: v.optional(v.number()), // The absolute timestamp when the user "dies"
+    lastNotified: v.optional(v.number()), // Timestamp of last notification sent (server-side for contacts)
     name: v.optional(v.string()),
+    checkInHour: v.optional(v.number()), // Default 8
+    checkInMinute: v.optional(v.number()), // Default 30
   }).index("by_token", ["token"]),
 
   contacts: defineTable({
