@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Is Mandi Dead?",
+    "name": "Are You Dead?",
     "slug": "areyoudead",
     "scheme": "areyoudead",
     "version": "1.0.0",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ccheever.ismandidead",
+      "bundleIdentifier": "com.ccheever.areyoudead",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

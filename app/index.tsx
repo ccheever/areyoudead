@@ -142,7 +142,7 @@ export default function HomeScreen() {
       resizeMode="cover"
     >
       <View style={styles.screen}>
-        <Text style={styles.title}>IS AMANDA WALL DEAD?</Text>
+        <Text style={styles.title}>ARE YOU DEAD?</Text>
         
         <View style={styles.timerContainer}>
           {isDead ? (
@@ -216,7 +216,9 @@ export default function HomeScreen() {
 
         {userContacts !== undefined && userContacts.length === 0 && (
           <TouchableOpacity style={styles.addContactButton} onPress={() => router.push("/settings")}>
-              <Text style={styles.addContactButtonText}>Add Emergency Contact</Text>
+              <Ionicons name="warning" size={20} color="#FF9500" style={{ marginBottom: 4 }} />
+              <Text style={styles.addContactButtonText}>No emergency contacts set</Text>
+              <Text style={styles.addContactSubtext}>Tap to add someone to notify if you don't check in</Text>
           </TouchableOpacity>
         )}
 
@@ -352,16 +354,24 @@ const styles = StyleSheet.create({
   },
   addContactButton: {
       marginTop: 20,
-      padding: 12,
-      backgroundColor: 'rgba(255,255,255,0.8)',
+      padding: 16,
+      backgroundColor: 'rgba(255,255,255,0.9)',
       borderRadius: 12,
-      borderWidth: 1,
-      borderColor: '#FFF',
+      borderWidth: 2,
+      borderColor: '#FF9500',
+      alignItems: 'center',
   },
   addContactButtonText: {
       color: '#333',
       fontSize: 16,
       fontFamily: 'JosefinSans_600SemiBold',
+  },
+  addContactSubtext: {
+      color: '#666',
+      fontSize: 13,
+      fontFamily: 'JosefinSans_400Regular',
+      marginTop: 4,
+      textAlign: 'center',
   },
   disabledOverlay: {
     position: 'absolute',
