@@ -199,7 +199,7 @@ export default function HomeScreen() {
               <Image source={require("../assets/DiamondButton.png")} style={styles.buttonImage} />
               <View style={styles.buttonOverlay}>
                 <Text style={[styles.buttonText, isButtonLocked && styles.disabledButtonText]}>
-                    {isDead ? "REVIVE ME" : (isButtonLocked ? "I'm glad you're\nalive today" : "I'M OK")}
+                    {isDead ? "NOT ACTUALLY DEAD" : (isButtonLocked ? "I'm glad you're\nalive today" : "I'M OK")}
                 </Text>
               </View>
               {isButtonLocked && !isDead && (
