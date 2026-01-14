@@ -10,7 +10,10 @@ export default function RootLayout() {
   return (
     <ConvexProvider client={convex}>
       <UserIdProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="settings" options={{ presentation: 'modal', headerShown: true, title: 'Settings' }} />
+        </Stack>
       </UserIdProvider>
     </ConvexProvider>
   );

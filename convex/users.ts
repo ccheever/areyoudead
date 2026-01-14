@@ -64,6 +64,7 @@ export const updateSettings = mutation({
         token: v.string(),
         checkInHour: v.number(),
         checkInMinute: v.number(),
+        debugMode: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const user = await ctx.db
@@ -73,10 +74,16 @@ export const updateSettings = mutation({
 
         if (!user) throw new Error("User not found");
 
-        await ctx.db.patch(user._id, {
+        const patch: any = {
             checkInHour: args.checkInHour,
             checkInMinute: args.checkInMinute
-        });
+        };
+
+        if (args.debugMode) {
+            patch.debugMode = args.debugMode;
+        }
+
+        await ctx.db.patch(user._id, patch);
     }
 });
 

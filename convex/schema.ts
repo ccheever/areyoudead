@@ -10,6 +10,7 @@ export default defineSchema({
     name: v.optional(v.string()),
     checkInHour: v.optional(v.number()), // Default 8
     checkInMinute: v.optional(v.number()), // Default 30
+    debugMode: v.optional(v.string()), // "standard", "1min", "10sec"
   }).index("by_token", ["token"]),
 
   contacts: defineTable({
