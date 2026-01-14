@@ -1,7 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useUserId } from "../hooks/useUserId";
+import { useNearestCity } from "../hooks/useNearestCity";
 import { useEffect, useState, useRef } from "react";
 import { Link, useRouter } from "expo-router";
 import { calculateNextDeadline } from "../utils/deadline";
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const checkIn = useMutation(api.users.checkIn);
   const getOrCreate = useMutation(api.users.getOrCreateUser);
   const router = useRouter();
+  const { imageSource: cityBackground } = useNearestCity();
 
   const [tick, setTick] = useState(0);
   const scaleValue = useRef(new Animated.Value(1)).current;
@@ -136,9 +138,10 @@ export default function HomeScreen() {
   const isFastMode = debugMode !== "standard";
 
   return (
-    <ImageBackground 
-      source={require("../assets/pink_background.jpeg")} 
+    <ImageBackground
+      source={cityBackground}
       style={styles.background}
+      imageStyle={{ opacity: 0.5 }}
       resizeMode="cover"
     >
       <View style={styles.screen}>
@@ -146,7 +149,10 @@ export default function HomeScreen() {
         
         <View style={styles.timerContainer}>
           {isDead ? (
-              <Text style={[styles.timerText, { color: 'red' }]}>WORRIED U R DEAD</Text>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={[styles.timerText, { color: 'red' }]}>WORRIED ABOUT YOU</Text>
+                <Text style={[styles.subtleText, { color: '#666', fontSize: 14, marginTop: 8 }]}>We notified your emergency contacts that you haven't checked in for a while</Text>
+              </View>
           ) : (
               <>
                   {!hasCheckedInToday && (
@@ -170,7 +176,7 @@ export default function HomeScreen() {
                   
                   {hasCheckedInToday && (
                       <View style={{ alignItems: 'center' }}>
-                          <Text style={[styles.subtleText, { color: '#000', fontSize: 24, fontFamily: 'JosefinSans_700Bold' }]}>
+                          <Text style={[styles.subtleText, { color: '#000', fontSize: 24, fontWeight: '700' }]}>
                           You're ok
                           </Text>
                           {isFastMode && (
@@ -184,27 +190,23 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => handleCheckIn(debugMode)}
           disabled={isButtonLocked && !isDead}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
           <Animated.View style={[
-              styles.imageButtonContainer, 
-              { transform: [{ scale: scaleValue }] }
+              styles.greenButtonContainer,
+              { transform: [{ scale: scaleValue }] },
+              isButtonLocked && !isDead && styles.greenButtonDisabled,
+              isDead && styles.greenButtonUrgent,
           ]}>
-              {isButtonLocked && !isDead && (
-                <View style={styles.disabledOverlay} />
-              )}
-              <Image source={require("../assets/DiamondButton.png")} style={styles.buttonImage} />
-              <View style={styles.buttonOverlay}>
-                <Text style={[styles.buttonText, isButtonLocked && styles.disabledButtonText]}>
-                    {isDead ? "NOT ACTUALLY DEAD" : (isButtonLocked ? "I'm glad you're\nalive today" : "I'M OK")}
-                </Text>
-              </View>
-              {isButtonLocked && !isDead && (
-                <View style={styles.disabledOverlay} />
-              )}
+              <Text style={[
+                styles.greenButtonText,
+                isButtonLocked && !isDead && styles.greenButtonTextDisabled,
+              ]}>
+                {isDead ? "CHECK IN" : (isButtonLocked ? "GLAD YOU'RE\nALIVE TODAY" : "CHECK IN")}
+              </Text>
           </Animated.View>
         </TouchableOpacity>
 
@@ -215,14 +217,21 @@ export default function HomeScreen() {
         )}
 
         {userContacts !== undefined && userContacts.length === 0 && (
-          <TouchableOpacity style={styles.addContactButton} onPress={() => router.push("/settings")}>
+          <TouchableOpacity style={styles.addContactButton} onPress={() => router.push("/contacts")}>
               <Ionicons name="warning" size={20} color="#FF9500" style={{ marginBottom: 4 }} />
               <Text style={styles.addContactButtonText}>No emergency contacts set</Text>
               <Text style={styles.addContactSubtext}>Tap to add someone to notify if you don't check in</Text>
           </TouchableOpacity>
         )}
 
-        <View style={styles.settingsContainer}>
+        <View style={styles.bottomButtonsContainer}>
+            <Link href="/contacts" asChild>
+              <TouchableOpacity>
+                  <BlurView intensity={80} tint="light" style={styles.glassButton}>
+                      <Ionicons name="people-outline" size={24} color="#333" />
+                  </BlurView>
+              </TouchableOpacity>
+            </Link>
             <Link href="/settings" asChild>
               <TouchableOpacity>
                   <BlurView intensity={80} tint="light" style={styles.glassButton}>
@@ -250,7 +259,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'JosefinSans_700Bold',
+    fontWeight: '700',
     marginBottom: 50,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -260,23 +269,23 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     color: '#333',
-    fontFamily: 'JosefinSans_400Regular',
+    fontWeight: '400',
   },
   timerContainer: {
     marginBottom: 40,
     alignItems: 'center',
-    minHeight: 80, 
+    minHeight: 80,
     justifyContent: 'center',
   },
   label: {
     fontSize: 16,
     color: '#666',
     marginBottom: 10,
-    fontFamily: 'JosefinSans_600SemiBold',
+    fontWeight: '600',
   },
   timerText: {
     fontSize: 28,
-    fontFamily: 'JosefinSans_700Bold',
+    fontWeight: '700',
     color: '#333',
     fontVariant: ['tabular-nums'],
   },
@@ -284,102 +293,93 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#555',
     textAlign: 'center',
-    fontFamily: 'JosefinSans_600SemiBold',
+    fontWeight: '600',
   },
   debugInfo: {
-      marginTop: 5,
-      fontSize: 12,
-      color: '#aaa',
-      fontFamily: 'Courier',
+    marginTop: 5,
+    fontSize: 12,
+    color: '#aaa',
+    fontFamily: 'Courier',
   },
   nextCheckInText: {
     fontSize: 18,
     color: '#444',
     marginTop: 30,
     textAlign: 'center',
-    fontFamily: 'JosefinSans_400Regular',
+    fontWeight: '400',
   },
-  imageButtonContainer: {
-    width: 322,
-    height: 322,
+  greenButtonContainer: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: '#34C759',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowColor: '#34C759',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  buttonImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
-    position: 'absolute',
+  greenButtonDisabled: {
+    opacity: 0.6,
+    backgroundColor: '#8E8E93',
+    shadowColor: '#8E8E93',
   },
-  buttonOverlay: {
-    width: '60%', 
-    height: '60%', 
-    justifyContent: 'center', 
-    alignItems: 'center',
+  greenButtonUrgent: {
+    backgroundColor: '#FF3B30',
+    shadowColor: '#FF3B30',
   },
-  buttonText: {
+  greenButtonText: {
     color: 'white',
-    fontSize: 32,
-    fontFamily: 'JosefinSans_700Bold',
+    fontSize: 36,
+    fontWeight: '800',
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    letterSpacing: 1,
   },
-  disabledButtonText: {
-    color: '#EEE',
-    fontSize: 20, 
-    fontFamily: 'JosefinSans_600SemiBold',
+  greenButtonTextDisabled: {
+    fontSize: 22,
+    fontWeight: '600',
   },
-  settingsContainer: {
-      position: 'absolute',
-      bottom: 40,
-      right: 30,
+  bottomButtonsContainer: {
+    position: 'absolute',
+    bottom: 40,
+    right: 30,
+    flexDirection: 'row',
+    gap: 12,
   },
   glassButton: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-      backgroundColor: 'rgba(255, 255, 255, 0.5)',
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.8)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   addContactButton: {
-      marginTop: 20,
-      padding: 16,
-      backgroundColor: 'rgba(255,255,255,0.9)',
-      borderRadius: 12,
-      borderWidth: 2,
-      borderColor: '#FF9500',
-      alignItems: 'center',
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#FF9500',
+    alignItems: 'center',
   },
   addContactButtonText: {
-      color: '#333',
-      fontSize: 16,
-      fontFamily: 'JosefinSans_600SemiBold',
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
   },
   addContactSubtext: {
-      color: '#666',
-      fontSize: 13,
-      fontFamily: 'JosefinSans_400Regular',
-      marginTop: 4,
-      textAlign: 'center',
+    color: '#666',
+    fontSize: 13,
+    fontWeight: '400',
+    marginTop: 4,
+    textAlign: 'center',
   },
-  disabledOverlay: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    right: 14,
-    bottom: 14,
-    backgroundColor: 'rgba(128, 128, 128, 0.4)',
-    borderRadius: 147, // Half of 294 (shrunk size)
-  }
 });

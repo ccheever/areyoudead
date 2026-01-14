@@ -8,16 +8,9 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_CONVEX_URL": "https://graceful-turtle-106.convex.cloud"
-      }
+      "distribution": "internal"
     },
-    "production": {
-      "env": {
-        "EXPO_PUBLIC_CONVEX_URL": "https://graceful-turtle-106.convex.cloud"
-      }
-    }
+    "production": {}
   },
   "submit": {
     "production": {}

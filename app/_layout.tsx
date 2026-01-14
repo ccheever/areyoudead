@@ -1,45 +1,58 @@
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { Stack } from "expo-router";
 import { UserIdProvider } from "../hooks/useUserId";
-import { useFonts, JosefinSans_400Regular, JosefinSans_700Bold, JosefinSans_600SemiBold } from '@expo-google-fonts/josefin-sans';
-import { View, ActivityIndicator } from "react-native";
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
-const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL || "https://graceful-turtle-106.convex.cloud";
-
-const convex = new ConvexReactClient(CONVEX_URL, {
+const convex = new ConvexReactClient("https://tidy-jaguar-132.convex.cloud", {
   unsavedChangesWarning: false,
 });
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
-    JosefinSans_400Regular,
-    JosefinSans_600SemiBold,
-    JosefinSans_700Bold,
-  });
-
-  if (!fontsLoaded) {
-    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator /></View>;
-  }
-
   return (
-    <ConvexProvider client={convex}>
-      <UserIdProvider>
-        <Stack screenOptions={{ headerShown: false }}>
+    <ActionSheetProvider useNativeDriver={true}>
+      <ConvexProvider client={convex}>
+        <UserIdProvider>
+          <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
-            <Stack.Screen 
-              name="settings" 
-              options={{ 
-                presentation: 'modal', 
-                headerShown: true, 
+            <Stack.Screen
+              name="settings"
+              options={{
+                presentation: 'modal',
+                headerShown: true,
                 title: 'Settings',
-                headerStyle: { backgroundColor: '#F8C8DC' },
+                headerStyle: { backgroundColor: '#F2F2F7' },
                 headerTintColor: '#333',
-                headerTitleStyle: { fontFamily: 'JosefinSans_700Bold' },
-                contentStyle: { backgroundColor: '#F8C8DC' } // Set default bg for stack screen
-              }} 
+                headerTitleStyle: { fontWeight: '700' },
+                contentStyle: { backgroundColor: '#F2F2F7' }
+              }}
             />
-        </Stack>
-      </UserIdProvider>
-    </ConvexProvider>
+            <Stack.Screen
+              name="contacts"
+              options={{
+                presentation: 'modal',
+                headerShown: true,
+                title: 'Emergency Contacts',
+                headerStyle: { backgroundColor: '#F2F2F7' },
+                headerTintColor: '#333',
+                headerTitleStyle: { fontWeight: '700' },
+                contentStyle: { backgroundColor: '#F2F2F7' }
+              }}
+            />
+            <Stack.Screen
+              name="debugging"
+              options={{
+                presentation: 'modal',
+                headerShown: true,
+                title: 'Debugging',
+                headerStyle: { backgroundColor: '#F2F2F7' },
+                headerTintColor: '#333',
+                headerTitleStyle: { fontWeight: '700' },
+                contentStyle: { backgroundColor: '#F2F2F7' }
+              }}
+            />
+          </Stack>
+        </UserIdProvider>
+      </ConvexProvider>
+    </ActionSheetProvider>
   );
 }
