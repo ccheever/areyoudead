@@ -4,7 +4,9 @@ import { UserIdProvider } from "../hooks/useUserId";
 import { useFonts, JosefinSans_400Regular, JosefinSans_700Bold, JosefinSans_600SemiBold } from '@expo-google-fonts/josefin-sans';
 import { View, ActivityIndicator } from "react-native";
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL || "https://graceful-turtle-106.convex.cloud";
+
+const convex = new ConvexReactClient(CONVEX_URL, {
   unsavedChangesWarning: false,
 });
 
