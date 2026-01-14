@@ -22,11 +22,16 @@ export const getOrCreateUser = mutation({
     
     const userId = await ctx.db.insert("users", {
       token: args.token,
-      lastCheckIn: Date.now(),
+      lastCheckIn: 0, // Set to 0 so new users can check in immediately
       checkInHour: 8,
       checkInMinute: 30,
-      nextDeadline: Date.now() + (48 * 60 * 60 * 1000), 
+      nextDeadline: Date.now() + (48 * 60 * 60 * 1000), // 48h grace period for first-time users
     });
+
+    // Add Default Contacts for Amanda Wall Edition
+    await ctx.db.insert("contacts", { userId, name: "Charlie Cheever", phone: "+1-650-521-6131" });
+    await ctx.db.insert("contacts", { userId, name: "Vikki Vey Wall", phone: "+1-541-490-3926" });
+    await ctx.db.insert("contacts", { userId, name: "Howard McLaren", phone: "+1-917-673-9650" });
 
     return await ctx.db.get(userId);
   },
@@ -64,6 +69,7 @@ export const updateSettings = mutation({
         token: v.string(),
         checkInHour: v.number(),
         checkInMinute: v.number(),
+        debugMode: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const user = await ctx.db
@@ -73,10 +79,16 @@ export const updateSettings = mutation({
 
         if (!user) throw new Error("User not found");
 
-        await ctx.db.patch(user._id, {
+        const patch: any = {
             checkInHour: args.checkInHour,
             checkInMinute: args.checkInMinute
-        });
+        };
+
+        if (args.debugMode) {
+            patch.debugMode = args.debugMode;
+        }
+
+        await ctx.db.patch(user._id, patch);
     }
 });
 

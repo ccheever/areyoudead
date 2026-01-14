@@ -9,11 +9,17 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@react-native-community/datetimepicker": "^8.6.0",
+    "@expo-google-fonts/josefin-sans": "^0.4.2",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@types/uuid": "^11.0.0",
     "convex": "^1.31.4",
     "expo": "~54.0.31",
+    "expo-blur": "^15.0.8",
+    "expo-clipboard": "^8.0.8",
     "expo-constants": "^18.0.13",
+    "expo-contacts": "^15.0.11",
+    "expo-font": "^14.0.10",
+    "expo-haptics": "^15.0.8",
     "expo-linking": "^8.0.11",
     "expo-notifications": "^0.32.16",
     "expo-router": "^6.0.21",
