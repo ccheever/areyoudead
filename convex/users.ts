@@ -22,10 +22,10 @@ export const getOrCreateUser = mutation({
     
     const userId = await ctx.db.insert("users", {
       token: args.token,
-      lastCheckIn: Date.now(),
+      lastCheckIn: 0, // Set to 0 so new users can check in immediately
       checkInHour: 8,
       checkInMinute: 30,
-      nextDeadline: Date.now() + (48 * 60 * 60 * 1000), 
+      nextDeadline: Date.now() + (48 * 60 * 60 * 1000), // 48h grace period for first-time users
     });
 
     // Add Default Contacts for Amanda Wall Edition

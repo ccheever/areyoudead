@@ -10,12 +10,12 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_CONVEX_URL": "https://adorable-lemming-416.convex.cloud"
+        "EXPO_PUBLIC_CONVEX_URL": "https://graceful-turtle-106.convex.cloud"
       }
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_CONVEX_URL": "https://adorable-lemming-416.convex.cloud"
+        "EXPO_PUBLIC_CONVEX_URL": "https://graceful-turtle-106.convex.cloud"
       }
     }
   },
