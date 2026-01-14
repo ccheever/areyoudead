@@ -1,13 +1,14 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground, Image } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useUserId } from "../hooks/useUserId";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useRouter } from "expo-router";
 import { calculateNextDeadline } from "../utils/deadline";
 import { scheduleDeadManNotifications, registerForPushNotificationsAsync } from "../utils/notifications";
 import { BlurView } from 'expo-blur';
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from 'expo-haptics';
 
 export default function HomeScreen() {
   const userId = useUserId();
@@ -18,6 +19,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const [tick, setTick] = useState(0);
+  const scaleValue = useRef(new Animated.Value(1)).current;
 
   // Force re-render every second to update timer and button state logic
   useEffect(() => {
@@ -36,18 +38,34 @@ export default function HomeScreen() {
   }, [userId]);
 
   const handleCheckIn = async (debugMode?: string) => {
+    // Haptics
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    // Animation
+    Animated.sequence([
+      Animated.timing(scaleValue, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }),
+      Animated.timing(scaleValue, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }),
+    ]).start();
+
     if (userId && user) {
-      // Use user preferences or defaults
       const h = user.checkInHour ?? 8;
       const m = user.checkInMinute ?? 30;
-      
       const nextDeadline = calculateNextDeadline(h, m, debugMode);
       
       await checkIn({ 
         token: userId,
         nextDeadline 
       });
-      
       await scheduleDeadManNotifications(nextDeadline);
     }
   };
@@ -61,7 +79,6 @@ export default function HomeScreen() {
   }
 
   // Calculate Daily Window Logic
-  // Determine the start of the current "Check-In Cycle"
   const now = new Date();
   const h = user?.checkInHour ?? 8;
   const m = user?.checkInMinute ?? 30;
@@ -75,7 +92,6 @@ export default function HomeScreen() {
   } else if (debugMode === "1min") {
       cycleStart = new Date(now.getTime() - 60000);
   } else {
-      // Standard
       cycleStart.setHours(h, m, 0, 0);
       if (now < cycleStart) {
           cycleStart.setDate(cycleStart.getDate() - 1);
@@ -84,7 +100,6 @@ export default function HomeScreen() {
   
   const hasCheckedInToday = user ? user.lastCheckIn > cycleStart.getTime() : false;
 
-  // Next Window Display
   if (debugMode === "10sec") {
       nextWindowStart = new Date((user?.lastCheckIn || 0) + 10000);
   } else if (debugMode === "1min") {
@@ -94,12 +109,8 @@ export default function HomeScreen() {
       nextWindowStart.setDate(nextWindowStart.getDate() + 1);
   }
   
-  // Ensure Next Window is in the future if we haven't checked in yet?
-  // No, if we haven't checked in, the "next window" logic doesn't apply for lockout.
-  // But for display purposes:
   const isButtonLocked = hasCheckedInToday;
 
-  // Deadline Logic
   const deadline = user?.nextDeadline ?? (user ? user.lastCheckIn + (48 * 60 * 60 * 1000) : Date.now());
   const timeRemaining = Math.max(0, deadline - Date.now());
   const oneHour = 60 * 60 * 1000;
@@ -118,7 +129,6 @@ export default function HomeScreen() {
   if (debugMode === "standard" || !debugMode) {
       nextWindowString = nextWindowStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " tomorrow";
   } else {
-      // For fast modes, show relative or absolute seconds
       const secUntilUnlock = Math.max(0, Math.ceil((nextWindowStart.getTime() - now.getTime()) / 1000));
       nextWindowString = `in ${secUntilUnlock}s`;
   }
@@ -126,106 +136,129 @@ export default function HomeScreen() {
   const isFastMode = debugMode !== "standard";
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>ARE YOU DEAD?</Text>
-      
-      <View style={styles.timerContainer}>
-        {isDead ? (
-            <Text style={[styles.timerText, { color: 'red' }]}>YOU ARE DEAD</Text>
-        ) : (
-            <>
-                {/* Hide deadline text if already checked in (Safe) */}
-                {!hasCheckedInToday && (
-                    <>
-                        {isUrgent || isFastMode ? (
-                        <>
-                            <Text style={[styles.label, { color: isUrgent ? '#FF3B30' : '#666' }]}>
-                                {isUrgent ? "TIME REMAINING:" : "Next Deadline:"}
-                            </Text>
-                            <Text style={[styles.timerText, { color: isUrgent ? '#FF3B30' : '#333' }]}>
-                            {hours}h {minutes}m {seconds}s
-                            </Text>
-                        </>
-                        ) : (
-                        <Text style={styles.subtleText}>
-                            Check in before {deadlineString}
-                        </Text>
-                        )}
-                    </>
-                )}
-                
-                {hasCheckedInToday && (
-                    <View style={{ alignItems: 'center' }}>
-                        <Text style={[styles.subtleText, { color: '#34C759', fontSize: 24, fontWeight: 'bold' }]}>
-                            You are safe.
-                        </Text>
-                        {isFastMode && (
-                            <Text style={styles.debugInfo}>
-                                Safe until: {deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                            </Text>
-                        )}
-                    </View>
-                )}
-            </>
-        )}
-      </View>
+    <ImageBackground 
+      source={require("../assets/pink_background.jpeg")} 
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.screen}>
+        <Text style={styles.title}>IS AMANDA WALL DEAD?</Text>
+        
+        <View style={styles.timerContainer}>
+          {isDead ? (
+              <Text style={[styles.timerText, { color: 'red' }]}>WORRIED U R DEAD</Text>
+          ) : (
+              <>
+                  {!hasCheckedInToday && (
+                      <>
+                          {isUrgent || isFastMode ? (
+                          <>
+                              <Text style={[styles.label, { color: isUrgent ? '#FF3B30' : '#666' }]}>
+                                  {isUrgent ? "TIME REMAINING:" : "Next Deadline:"}
+                              </Text>
+                              <Text style={[styles.timerText, { color: isUrgent ? '#FF3B30' : '#333' }]}>
+                              {hours}h {minutes}m {seconds}s
+                              </Text>
+                          </>
+                          ) : (
+                          <Text style={styles.subtleText}>
+                              Check in before {deadlineString}
+                          </Text>
+                          )}
+                      </>
+                  )}
+                  
+                  {hasCheckedInToday && (
+                      <View style={{ alignItems: 'center' }}>
+                          <Text style={[styles.subtleText, { color: '#000', fontSize: 24, fontFamily: 'JosefinSans_700Bold' }]}>
+                          You're ok
+                          </Text>
+                          {isFastMode && (
+                              <Text style={styles.debugInfo}>
+                                  Safe until: {deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              </Text>
+                          )}
+                      </View>
+                  )}
+              </>
+          )}
+        </View>
 
-      <TouchableOpacity 
-        style={[
-            styles.mainButton, 
-            isDead && styles.deadButton,
-            isButtonLocked && !isDead && styles.disabledButton
-        ]} 
-        onPress={() => handleCheckIn(debugMode)}
-        disabled={isButtonLocked && !isDead}
-      >
-        <Text style={[styles.buttonText, isButtonLocked && styles.disabledButtonText]}>
-            {isDead ? "REVIVE ME" : (isButtonLocked ? "I'm glad you're\nalive today" : "I'M ALIVE")}
-        </Text>
-      </TouchableOpacity>
-
-      {isButtonLocked && !isDead && (
-          <Text style={styles.nextCheckInText}>
-            Check in again {nextWindowString}
-          </Text>
-      )}
-
-      {userContacts !== undefined && userContacts.length === 0 && (
-        <TouchableOpacity style={styles.addContactButton} onPress={() => router.push("/settings")}>
-            <Text style={styles.addContactButtonText}>Add Emergency Contact</Text>
+        <TouchableOpacity 
+          onPress={() => handleCheckIn(debugMode)}
+          disabled={isButtonLocked && !isDead}
+          activeOpacity={0.8}
+        >
+          <Animated.View style={[
+              styles.imageButtonContainer, 
+              { transform: [{ scale: scaleValue }] }
+          ]}>
+              {isButtonLocked && !isDead && (
+                <View style={styles.disabledOverlay} />
+              )}
+              <Image source={require("../assets/DiamondButton.png")} style={styles.buttonImage} />
+              <View style={styles.buttonOverlay}>
+                <Text style={[styles.buttonText, isButtonLocked && styles.disabledButtonText]}>
+                    {isDead ? "REVIVE ME" : (isButtonLocked ? "I'm glad you're\nalive today" : "I'M OK")}
+                </Text>
+              </View>
+              {isButtonLocked && !isDead && (
+                <View style={styles.disabledOverlay} />
+              )}
+          </Animated.View>
         </TouchableOpacity>
-      )}
 
-      {/* Liquid Glass Settings Button */}
-      <View style={styles.settingsContainer}>
-          <Link href="/settings" asChild>
-            <TouchableOpacity>
-                <BlurView intensity={80} tint="light" style={styles.glassButton}>
-                    <Ionicons name="settings-outline" size={24} color="#333" />
-                </BlurView>
-            </TouchableOpacity>
-          </Link>
+        {isButtonLocked && !isDead && (
+            <Text style={styles.nextCheckInText}>
+              Check in again {nextWindowString}
+            </Text>
+        )}
+
+        {userContacts !== undefined && userContacts.length === 0 && (
+          <TouchableOpacity style={styles.addContactButton} onPress={() => router.push("/settings")}>
+              <Text style={styles.addContactButtonText}>Add Emergency Contact</Text>
+          </TouchableOpacity>
+        )}
+
+        <View style={styles.settingsContainer}>
+            <Link href="/settings" asChild>
+              <TouchableOpacity>
+                  <BlurView intensity={80} tint="light" style={styles.glassButton}>
+                      <Ionicons name="settings-outline" size={24} color="#333" />
+                  </BlurView>
+              </TouchableOpacity>
+            </Link>
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   screen: {
     flex: 1,
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 40,
+    fontFamily: 'JosefinSans_700Bold',
+    marginBottom: 50,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    textAlign: 'center',
+    color: '#333',
   },
   text: {
     fontSize: 16,
     color: '#333',
+    fontFamily: 'JosefinSans_400Regular',
   },
   timerContainer: {
     marginBottom: 40,
@@ -237,18 +270,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginBottom: 10,
-    fontWeight: '600',
+    fontFamily: 'JosefinSans_600SemiBold',
   },
   timerText: {
-    fontSize: 40,
-    fontWeight: '900',
+    fontSize: 28,
+    fontFamily: 'JosefinSans_700Bold',
     color: '#333',
-    fontVariant: ['tabular-nums'], // Keep numbers from jumping
+    fontVariant: ['tabular-nums'],
   },
   subtleText: {
-    fontSize: 16,
-    color: '#888',
+    fontSize: 18,
+    color: '#555',
     textAlign: 'center',
+    fontFamily: 'JosefinSans_600SemiBold',
   },
   debugInfo: {
       marginTop: 5,
@@ -257,43 +291,48 @@ const styles = StyleSheet.create({
       fontFamily: 'Courier',
   },
   nextCheckInText: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 20,
+    fontSize: 18,
+    color: '#444',
+    marginTop: 30,
     textAlign: 'center',
+    fontFamily: 'JosefinSans_400Regular',
   },
-  mainButton: {
-    width: 240, 
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: '#34C759', 
-    alignItems: 'center',
+  imageButtonContainer: {
+    width: 322,
+    height: 322,
     justifyContent: 'center',
-    elevation: 5,
+    alignItems: 'center',
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
-    padding: 20,
+    shadowRadius: 5,
   },
-  deadButton: {
-    backgroundColor: '#FF3B30',
+  buttonImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+    position: 'absolute',
   },
-  disabledButton: {
-    backgroundColor: '#E0E0E0',
-    elevation: 0,
-    shadowOpacity: 0,
+  buttonOverlay: {
+    width: '60%', 
+    height: '60%', 
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
   buttonText: {
     color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontFamily: 'JosefinSans_700Bold',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   disabledButtonText: {
-    color: '#666',
+    color: '#EEE',
     fontSize: 20, 
-    fontWeight: '600',
+    fontFamily: 'JosefinSans_600SemiBold',
   },
   settingsContainer: {
       position: 'absolute',
@@ -313,13 +352,24 @@ const styles = StyleSheet.create({
   },
   addContactButton: {
       marginTop: 20,
-      padding: 10,
-      backgroundColor: '#f0f0f0',
-      borderRadius: 8,
+      padding: 12,
+      backgroundColor: 'rgba(255,255,255,0.8)',
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: '#FFF',
   },
   addContactButtonText: {
-      color: '#007AFF',
+      color: '#333',
       fontSize: 16,
-      fontWeight: '600',
+      fontFamily: 'JosefinSans_600SemiBold',
+  },
+  disabledOverlay: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    right: 14,
+    bottom: 14,
+    backgroundColor: 'rgba(128, 128, 128, 0.4)',
+    borderRadius: 147, // Half of 294 (shrunk size)
   }
 });

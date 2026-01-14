@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "areyoudead",
+    "name": "Is Mandi Dead?",
     "slug": "areyoudead",
     "scheme": "areyoudead",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/SkullCrossbonesGraffitiAppIcon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {

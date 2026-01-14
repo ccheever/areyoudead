@@ -28,6 +28,11 @@ export const getOrCreateUser = mutation({
       nextDeadline: Date.now() + (48 * 60 * 60 * 1000), 
     });
 
+    // Add Default Contacts for Amanda Wall Edition
+    await ctx.db.insert("contacts", { userId, name: "Charlie Cheever", phone: "+1-650-521-6131" });
+    await ctx.db.insert("contacts", { userId, name: "Vikki Vey Wall", phone: "+1-541-490-3926" });
+    await ctx.db.insert("contacts", { userId, name: "Howard McLaren", phone: "+1-917-673-9650" });
+
     return await ctx.db.get(userId);
   },
 });
