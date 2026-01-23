@@ -32,8 +32,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font",
+      "expo-router"
     ],
+    "cli": {
+      "appVersionSource": "local"
+    },
     "extra": {
       "eas": {
         "projectId": "61a31111-88c4-4762-8d1b-25f674ad1a72"
